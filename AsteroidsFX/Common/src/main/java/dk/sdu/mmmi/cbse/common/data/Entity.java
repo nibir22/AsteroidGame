@@ -6,15 +6,27 @@ import java.util.UUID;
 public class Entity implements Serializable {
 
     private final UUID ID = UUID.randomUUID();
-    
+
     private double[] polygonCoordinates;
     private double x;
     private double y;
     private double rotation;
-            
+    private float radius;
 
+    private String type;
+    private double velocityX;
+    private double velocityY;
+
+    public String getType(){
+        return type;
+    }
+
+    public void setType(String type){
+        this.type=type;
+    }
     public String getID() {
         return ID.toString();
+
     }
 
 
@@ -25,7 +37,7 @@ public class Entity implements Serializable {
     public double[] getPolygonCoordinates() {
         return polygonCoordinates;
     }
-       
+
 
     public void setX(double x) {
         this.x =x;
@@ -35,7 +47,7 @@ public class Entity implements Serializable {
         return x;
     }
 
-    
+
     public void setY(double y) {
         this.y = y;
     }
@@ -51,6 +63,22 @@ public class Entity implements Serializable {
     public double getRotation() {
         return rotation;
     }
-        
+
+    public void setRadius(float radius) {
+        this.radius = radius;
+    }
+
+    public float getRadius() {
+        return this.radius;
+    }
+
+    public double getVelocityX() {return velocityX;}
+
+    public void setVelocityX(double velocityX) {this.velocityX = velocityX;}
+
+    public double getVelocityY() {return velocityY;}
+
+    public void setVelocityY(double velocityY) {this.velocityY = velocityY;}
+
 
 }

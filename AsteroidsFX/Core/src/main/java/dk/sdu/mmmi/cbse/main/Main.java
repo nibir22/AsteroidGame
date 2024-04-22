@@ -1,15 +1,14 @@
 package dk.sdu.mmmi.cbse.main;
 
-import dk.sdu.mmmi.cbse.common.data.*;
+import dk.sdu.mmmi.cbse.common.data.Entity;
+import dk.sdu.mmmi.cbse.common.data.GameData;
+import dk.sdu.mmmi.cbse.common.data.GameKeys;
+import dk.sdu.mmmi.cbse.common.data.World;
 import dk.sdu.mmmi.cbse.common.services.IEntityProcessingService;
 import dk.sdu.mmmi.cbse.common.services.IGamePluginService;
 import dk.sdu.mmmi.cbse.common.services.IPostEntityProcessingService;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.ServiceLoader;
+
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import static java.util.stream.Collectors.toList;
 import javafx.animation.AnimationTimer;
@@ -26,8 +25,7 @@ public class Main extends Application {
     private final GameData gameData = new GameData();
     private final World world = new World();
     private final Map<Entity, Polygon> polygons = new ConcurrentHashMap<>();
-    private Pane gameWindow = new Pane();
-    
+    private final Pane gameWindow = new Pane();
 
     public static void main(String[] args) {
         launch(Main.class);
@@ -40,8 +38,6 @@ public class Main extends Application {
         gameWindow.getChildren().add(text);
 
         Scene scene = new Scene(gameWindow);
-        EnemyPlane enemyPlane = new EnemyPlane();
-
         scene.setOnKeyPressed(event -> {
             if (event.getCode().equals(KeyCode.LEFT)) {
                 gameData.getKeys().setKey(GameKeys.LEFT, true);
@@ -59,6 +55,7 @@ public class Main extends Application {
                 gameData.getKeys().setKey(GameKeys.DOWN, true);
             }
         });
+
         scene.setOnKeyReleased(event -> {
             if (event.getCode().equals(KeyCode.LEFT)) {
                 gameData.getKeys().setKey(GameKeys.LEFT, false);
@@ -76,7 +73,6 @@ public class Main extends Application {
                 gameData.getKeys().setKey(GameKeys.DOWN, false);
             }
 
-
         });
 
         // Lookup all Game Plugins using ServiceLoader
@@ -87,20 +83,17 @@ public class Main extends Application {
             Polygon polygon = new Polygon(entity.getPolygonCoordinates());
             polygons.put(entity, polygon);
             gameWindow.getChildren().add(polygon);
+
+
         }
-
         render();
-
         window.setScene(scene);
         window.setTitle("ASTEROIDS");
         window.show();
-
     }
 
     private void render() {
         new AnimationTimer() {
-            private long then = 0;
-
             @Override
             public void handle(long now) {
                 update();
@@ -112,53 +105,70 @@ public class Main extends Application {
     }
 
     private void update() {
-
-        // Update
         for (IEntityProcessingService entityProcessorService : getEntityProcessingServices()) {
             entityProcessorService.process(gameData, world);
         }
-//        for (IPostEntityProcessingService postEntityProcessorService : getPostEntityProcessingServices()) {
-//            postEntityProcessorService.process(gameData, world);
-//        }
+        for (IPostEntityProcessingService postEntityProcessorService : getPostEntityProcessingServices()) {
+            postEntityProcessorService.process(gameData, world);
+        }
+
     }
 
     private void draw() {
-        List <Entity> reRemove = new ArrayList<>();
+
+
+        for (Entity polygonEntity : polygons.keySet()) {
+            if(!world.getEntities().contains(polygonEntity)){
+                Polygon removedPolygon = polygons.get(polygonEntity);
+                polygons.remove(polygonEntity);
+                gameWindow.getChildren().remove(removedPolygon);
+            }
+        }
+
+
+
 
         for (Entity entity : world.getEntities()) {
             Polygon polygon = polygons.get(entity);
-            if (polygon == null){
+            if (polygon == null) {
                 polygon = new Polygon(entity.getPolygonCoordinates());
-                polygons.put(entity,polygon);
+                polygons.put(entity, polygon);
                 gameWindow.getChildren().add(polygon);
-
-
-
-
-
-
-
             }
             polygon.setTranslateX(entity.getX());
             polygon.setTranslateY(entity.getY());
             polygon.setRotate(entity.getRotation());
-            if (entity.getX()> gameData.getDisplayWidth() || entity.getY()> gameData.getDisplayHeight() || entity.getX() < 0 || entity.getY() < 0){
-                reRemove.add(entity);
+
+            //Old entity remover if entity was out of displaywidth/height
+            /*
+            if (entity.getX()>gameData.getDisplayWidth() || entity.getY()>gameData.getDisplayHeight() || entity.getX() < 0 || entity.getY() <0){
 
                 if (polygon != null){
                     gameWindow.getChildren().remove(polygon);
+
                 }
-
-
                 world.removeEntity(entity);
 
             }
+
+             */
+
+
+
+
+
 
 
 
 
         }
+
+
     }
+
+    //Personlige herunder
+    private Map<IGamePluginService, Long> scheduledTasks = new HashMap<>();
+
 
     private Collection<? extends IGamePluginService> getPluginServices() {
         return ServiceLoader.load(IGamePluginService.class).stream().map(ServiceLoader.Provider::get).collect(toList());

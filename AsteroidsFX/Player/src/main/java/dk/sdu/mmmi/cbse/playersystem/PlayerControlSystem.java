@@ -10,14 +10,19 @@ import dk.sdu.mmmi.cbse.common.services.IEntityProcessingService;
 import java.util.Collection;
 import java.util.ServiceLoader;
 
+
 import static java.util.stream.Collectors.toList;
+
+
+
 
 
 public class PlayerControlSystem implements IEntityProcessingService {
 
+
     @Override
     public void process(GameData gameData, World world) {
-            
+
         for (Entity player : world.getEntities(Player.class)) {
             if (gameData.getKeys().isDown(GameKeys.LEFT)) {
                 player.setRotation(player.getRotation() - 5);                
@@ -39,17 +44,29 @@ public class PlayerControlSystem implements IEntityProcessingService {
                 player.setY(player.getY() - changeY);
 
             }
-            if (gameData.getKeys().isDown(GameKeys.SPACE)){
+
+
+            if (gameData.getKeys().isPressed(GameKeys.SPACE)) {
                 for (BulletSPI bulletSPI : getBulletSPIs()){
-                    world.addEntity(bulletSPI.createBullet(player,gameData));
-
-
-
+                    Entity bullet = bulletSPI.createBullet(player,gameData);
+                    world.addEntity(bullet);
                 }
+                    //Old code, kept for checking
+                    /*
+                    getBulletSPIs().stream().findFirst().ifPresent(shoot -> {
+                        world.addEntity(shoot.createBullet(player, gameData));
+
+                    });
+                    
+                     */
 
             }
-            
-        if (player.getX() < 0) {
+
+
+
+
+
+            if (player.getX() < 0) {
             player.setX(1);
         }
 
